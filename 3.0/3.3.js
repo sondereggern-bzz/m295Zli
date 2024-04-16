@@ -62,6 +62,30 @@ app.get('/me', (req, res) => {
     });
 });
 
+
+app.get('/now', (req, res) => {
+    res.send(new Date().toLocaleTimeString("de-CH", {timeZone: request.query.tz}));
+});
+
+app.post('/names', (req, res) => {
+    //post method that adds a name to the list, der name wird per form mitgegeben
+    const name = req.body.name;
+    names.push(name);
+    res.send(`Name ${name} added to list`);
+});
+
+app.delete('/names', (req, res) => {
+    //delete method that deletes a name from the list, der name wird per form mitgegeben und gibt dann 204 zurück
+    const name = req.body.name;
+    const index = names.indexOf(name);
+    if (index > -1) {
+        names.splice(index, 1);
+        res.sendStatus(204);
+    }
+});
+
+
+
 app.listen(port, () => {
     console.log(`Server läuft auf Port ${port}`);
 });
