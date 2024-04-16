@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "bl": "^6.0.12",
+    "express": "^4.19.2",
+    "fs": "^0.0.1-security",
+    "request": "^2.88.2"
+  }
+}
