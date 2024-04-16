@@ -47,9 +47,10 @@ app.get('/secret', (req, res) => {
     res.status(403).send('Access denied');
 });
 
+
 app.get('/xml', (req, res) => {
     res.set('Content-Type', 'text/xml');
-    res.send('<note><to>Tove</to><from>Jani</from><heading>Reminder</heading><body>Don\'t forget me this weekend!</body></note>');
+    res.send();
 });
 
 app.get('/me', (req, res) => {
