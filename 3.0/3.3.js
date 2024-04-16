@@ -5,8 +5,7 @@ const app = express();
 const port = 3000;
 
 function getTime() {
-    const response = new Date().toLocaleTimeString();
-    return response;
+    return new Date().toLocaleTimeString();
 }
 
 app.get('/now', (req, res) => {
