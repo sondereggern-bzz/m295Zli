@@ -49,8 +49,7 @@ app.get('/secret', (req, res) => {
 
 
 app.get('/xml', (req, res) => {
-    res.set('Content-Type', 'text/xml');
-    res.send();
+    res.type('text/xml').send(fs.readFileSync('C://Users/xavier//WebstormProjects//ZLI-M295//A3//A3.3//static//data.xml', 'utf8'));
 });
 
 app.get('/me', (req, res) => {
