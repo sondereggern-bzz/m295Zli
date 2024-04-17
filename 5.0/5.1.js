@@ -35,43 +35,47 @@ app.post('/books', (req, res) => {
     res.status(201).json(newBook);
 });
 
+// Function to find index of book by ISBN
+function findBookIndex(isbn) {
+    return books.findIndex((book) => book.isbn === isbn);
+}
+
 // PUT Aktualisieren ISBN
 app.put('/books/:isbn', (req, res) => {
     const isbn = req.params.isbn;
-    const updatedBook = req.body;
-    const index = books.findIndex((book) => book.isbn === isbn);
+    const index = findBookIndex(isbn);
     if (index !== -1) {
-        books[index] = updatedBook;
-        res.json(updatedBook);
+        books[index] = req.body;
+        res.json(books[index]);
     } else {
-        res.status(404).json({ error: 'Book not found' });
+        res.status(404).json({ error: 'Error' });
     }
 });
 
-// Delete (ISBN)
+// DELETE (ISBN)
 app.delete('/books/:isbn', (req, res) => {
     const isbn = req.params.isbn;
-    const index = books.findIndex((book) => book.isbn === isbn);
+    const index = findBookIndex(isbn);
     if (index !== -1) {
         books.splice(index, 1);
         res.sendStatus(204);
     } else {
-        res.status(404).json({ error: 'Book not found' });
+        res.status(404).json({ error: 'Error' });
     }
 });
-//Patch (ISBN)
+
+// PATCH (ISBN)
 app.patch('/books/:isbn', (req, res) => {
     const isbn = req.params.isbn;
     const updatedFields = req.body;
-    const index = books.findIndex(b => b.isbn === isbn);
+    const index = findBookIndex(isbn);
     if (index !== -1) {
         Object.assign(books[index], updatedFields);
         res.json(books[index]);
     } else {
-        res.status(404).json({ error: 'Book not found' });
+        res.status(404).json({ error: 'Error' });
     }
 });
-
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
