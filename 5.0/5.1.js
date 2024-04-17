@@ -65,17 +65,21 @@ app.delete('/books/:isbn', (req, res) => {
 });
 
 // PATCH (ISBN)
-app.patch('/books/:isbn', (req, res) => {
-    const isbn = req.params.isbn;
-    const updatedFields = req.body;
-    const index = findBookIndex(isbn);
-    if (index !== -1) {
-        Object.assign(books[index], updatedFields);
-        res.json(books[index]);
-    } else {
-        res.status(404).json({ error: 'Error' });
-    }
+
+app.patch('/books/:isbn', (request, response) => {
+    // books = books.map((book) =>
+    //   book.isbn === request.params.isbn ? {...book, ...request.body} : book
+    // );
+    books = books.map((book) => {
+        if(book.isbn === request.params.isbn) {
+            return {...book, ...request.body};
+        } else {
+            return book;
+        }
+    })
+    response.send(books);
 });
+
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
