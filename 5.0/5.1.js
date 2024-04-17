@@ -2,10 +2,7 @@ const express = require('express');
 const port = 3000;
 const app = express();
 app.use(express.json());
-app.use(express.urlencoded({ extended: true}));
-
-
-
+app.use(express.urlencoded({ extended: true }));
 
 let books = [
     { isbn: '978-3-16-148410-0', title: 'Der Herr der Ringe', year: 1954, author: 'J.R.R. Tolkien' },
@@ -15,7 +12,10 @@ let books = [
     { isbn: '978-3-518-01547-6', title: 'Der Steppenwolf', year: 1927, author: 'Hermann Hesse' }
 ];
 
-
+let lends = [
+    { id: 1, customer_id: 123, isbn: '978-3-16-148410-0', borrowed_at: new Date(), returned_at: null },
+    { id: 2, customer_id: 456, isbn: '978-3-446-10295-6', borrowed_at: new Date(), returned_at: null }
+];
 
 // GET Endpoint für alle Bücher
 app.get('/books', (req, res) => {
@@ -65,21 +65,56 @@ app.delete('/books/:isbn', (req, res) => {
 });
 
 // PATCH (ISBN)
-
-app.patch('/books/:isbn', (request, response) => {
-    // books = books.map((book) =>
-    //   book.isbn === request.params.isbn ? {...book, ...request.body} : book
-    // );
-    books = books.map((book) => {
-        if(book.isbn === request.params.isbn) {
-            return {...book, ...request.body};
-        } else {
-            return book;
-        }
-    })
-    response.send(books);
+app.patch('/books/:isbn', (req, res) => {
+    const isbn = req.params.isbn;
+    books = books.map((book) =>
+        book.isbn === isbn ? { ...book, ...req.body } : book
+    );
+    res.json(books);
 });
 
+
+// GET alle Ausleihen
+app.get('/lends', (req, res) => {
+    res.json(lends);
+});
+
+// GET einzelne Ausleihe anhand ihrer id
+app.get('/lends/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const lend = lends.find((lend) => lend.id === id);
+    if (lend) {
+        res.json(lend);
+    } else {
+        res.status(404).json({ error: 'Lend not found' });
+    }
+});
+
+// POST Ausleihen eines Buchs
+app.post('/lends', (req, res) => {
+    const { customer_id, isbn } = req.body;
+    const borrowed_at = new Date();
+    const returned_at = null;
+    const id = lends.length > 0 ? Math.max(...lends.map(lend => lend.id)) + 1 : 1;
+    // ? : ist wie if else, code um die ID zu generieren ^
+    const newLend = { id, customer_id, isbn, borrowed_at, returned_at };
+    lends.push(newLend);
+    res.json(newLend);
+});
+
+
+
+// DELETE Zurückgeben id
+app.delete('/lends/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const index = lends.findIndex(lend => lend.id === id);
+    if (index !== -1) {
+        lends.splice(index, 1);
+        res.status(204).json({});
+    } else {
+        res.status(404).json({ error: 'Lend not found' });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
