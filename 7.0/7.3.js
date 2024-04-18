@@ -17,17 +17,19 @@ app.use(session({
     saveUninitialized: true
 }));
 
+// Konfiguration für BasicAuth
 const authMiddleware = basicAuth({
     users: { 'desk@library.example': 'm295' },
     unauthorizedResponse: 'Falsche Anmeldeinformationen'
 });
 
+// Endpunkt für den Login mit BasicAuth
 app.post('/login', authMiddleware, (req, res) => {
     req.session.authenticated = true;
     res.status(201).json({ email: req.auth.user, message: 'Login erfolgreich' });
 });
 
-//?
+// Endpunkt für die Überprüfung der Session
 app.get('/verify', (req, res) => {
     if (req.session.authenticated) {
         res.status(200).json({ email: req.auth.user });
@@ -36,15 +38,18 @@ app.get('/verify', (req, res) => {
     }
 });
 
+// Endpunkt für den Logout
 app.delete('/logout', (req, res) => {
     req.session.authenticated = false;
     res.status(204).send();
 });
 
+// Endpunkt für den öffentlichen Zugriff
 app.get('/public', (req, res) => {
     res.send('Public endpoint');
 });
 
+// Endpunkt für den privaten Zugriff
 app.get('/private', authMiddleware, (req, res) => {
     res.send('Private endpoint');
 });

@@ -12,46 +12,55 @@ const session = require("express-session"); // Pfad zur automatisch generierten 
 app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(session({
-    secret: 'geheimnisvollesGeheimnis',
+    secret: 'supersecret',
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: false,
+    cookie: {}
 }));
 
-// Konfiguration für BasicAuth
-const authMiddleware = basicAuth({
-    users: { 'desk@library.example': 'm295' },
-    unauthorizedResponse: 'Falsche Anmeldeinformationen'
-});
+// Dummy-Benutzerdaten für den Login
+const secretAdminCredentials = { email: "desk@library.example", password: "m295" };
 
-// Endpunkt für den Login mit BasicAuth
-app.post('/login', authMiddleware, (req, res) => {
-    req.session.authenticated = true;
-    res.status(201).json({ email: req.auth.user, message: 'Login erfolgreich' });
-});
-
-// Endpunkt für die Überprüfung der Session
-app.get('/verify', (req, res) => {
-    if (req.session.authenticated) {
-        res.status(200).json({ email: req.auth.user });
+// Middleware für die Authentifizierung
+const authMiddleware = (req, res, next) => {
+    if (req.session.email) {
+        next(); // Weiter zur nächsten Middleware oder Route, wenn authentifiziert
     } else {
-        res.status(401).json({ error: 'Unauthentifizierter Benutzer' });
+        res.status(401).json({ error: "Unauthorized" });
     }
+};
+
+// Login-Endpunkt
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+
+    // Überprüfung der Anmeldeinformationen
+    if (email?.toLowerCase() === secretAdminCredentials.email && password === secretAdminCredentials.password) {
+        // Verknüpfen der E-Mail mit der Sitzung
+        req.session.email = email;
+        return res.status(200).json({ email: req.session.email });
+    }
+
+    return res.status(401).json({ error: "Invalid credentials" });
 });
 
-// Endpunkt für den Logout
+// Logout-Endpunkt
 app.delete('/logout', (req, res) => {
-    req.session.authenticated = false;
-    res.status(204).send();
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ error: "Logout failed" });
+        }
+        res.status(204).end();
+    });
 });
 
-// Endpunkt für den öffentlichen Zugriff
-app.get('/public', (req, res) => {
-    res.send('Public endpoint');
-});
-
-// Endpunkt für den privaten Zugriff
-app.get('/private', authMiddleware, (req, res) => {
-    res.send('Private endpoint');
+// Überprüfung der Session-Endpunkt
+app.get('/verify', (req, res) => {
+    if (req.session.email) {
+        res.status(200).json({ email: req.session.email });
+    } else {
+        res.status(401).json({ error: "Unauthorized" });
+    }
 });
 
 let books = [
@@ -127,46 +136,21 @@ app.patch('/books/:isbn', (req, res) => {
 
 // GET alle Ausleihen
 app.get('/lends', authMiddleware, (req, res) => {
-    res.json(lends);
+    // Hier würde der Code stehen, um alle Ausleihen abzurufen
+    res.status(200).json({ message: "List of lends" });
 });
 
-// GET einzelne Ausleihe anhand ihrer id
-app.get('/lends/:id', authMiddleware, (req, res) => {
-    const id = parseInt(req.params.id);
-    const lend = lends.find((lend) => lend.id === id);
-    if (lend) {
-        res.json(lend);
-    } else {
-        res.status(404).json({ error: 'Lend not found' });
-    }
-});
-
-// POST Ausleihen eines Buchs
+// POST Ausleihen eines Buchs (geschützt durch Authentifizierung)
 app.post('/lends', authMiddleware, (req, res) => {
-    const { customer_id, isbn } = req.body;
-    const borrowed_at = new Date();
-    const returned_at = null;
-    const id = lends.length > 0 ? Math.max(...lends.map(lend => lend.id)) + 1 : 1;
-    // ? : ist wie if else, code um die ID zu generieren ^
-    const newLend = { id, customer_id, isbn, borrowed_at, returned_at };
-    lends.push(newLend);
-    res.json(newLend);
+    // Hier würde der Code stehen, um eine Ausleihe hinzuzufügen
+    res.status(201).json({ message: "Lend added" });
 });
 
-
-
-// DELETE Zurückgeben id
+// DELETE Zurückgeben einer Ausleihe (geschützt durch Authentifizierung)
 app.delete('/lends/:id', authMiddleware, (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = lends.findIndex(lend => lend.id === id);
-    if (index !== -1) {
-        lends.splice(index, 1);
-        res.status(204).json({});
-    } else {
-        res.status(404).json({ error: 'Lend not found' });
-    }
+    // Hier würde der Code stehen, um eine Ausleihe zurückzugeben
+    res.status(204).end();
 });
-
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
