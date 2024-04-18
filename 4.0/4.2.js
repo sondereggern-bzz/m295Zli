@@ -62,6 +62,9 @@ app.patch("/me", (req, res) => {
     res.send({...about, ...req.body});
 });
 
+
+
+
 app.listen(port, () => {
     console.log(`Server läuft auf Port ${port}`);
 });

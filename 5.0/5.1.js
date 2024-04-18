@@ -4,6 +4,10 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger-output.json'); // Pfad zur automatisch generierten Swagger-Spezifikationsdatei
+app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 let books = [
     { isbn: '978-3-16-148410-0', title: 'Der Herr der Ringe', year: 1954, author: 'J.R.R. Tolkien' },
     { isbn: '978-3-446-10295-6', title: 'Harry Potter und der Stein der Weisen', year: 1997, author: 'J.K. Rowling' },
@@ -53,14 +57,15 @@ app.put('/books/:isbn', (req, res) => {
 });
 
 // DELETE (ISBN)
-app.delete('/books/:isbn', (req, res) => {
+app.delete("/books/:isbn", (req, res) => {
     const isbn = req.params.isbn;
-    const index = findBookIndex(isbn);
-    if (index !== -1) {
-        books.splice(index, 1);
-        res.sendStatus(204);
+    const Index = books.findIndex(book => book.isbn === isbn);
+
+    if (Index >= 0) {
+        books.splice(Index, 1);
+        res.send({ message: "Book deleted" });
     } else {
-        res.status(404).json({ error: 'Error' });
+        res.status(404).json({ error: "Book not found" });
     }
 });
 
