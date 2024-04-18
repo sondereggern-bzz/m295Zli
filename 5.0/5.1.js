@@ -3,10 +3,56 @@ const port = 3000;
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const basicAuth = require('express-basic-auth');
+
 
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocument = require('./swagger-output.json'); // Pfad zur automatisch generierten Swagger-Spezifikationsdatei
+const swaggerDocument = require('./swagger-output.json');
+const session = require("express-session"); // Pfad zur automatisch generierten Swagger-Spezifikationsdatei
 app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+app.use(session({
+    secret: 'geheimnisvollesGeheimnis',
+    resave: false,
+    saveUninitialized: true
+}));
+
+// Konfiguration für BasicAuth
+const authMiddleware = basicAuth({
+    users: { 'desk@library.example': 'm295' },
+    unauthorizedResponse: 'Falsche Anmeldeinformationen'
+});
+
+// Endpunkt für den Login mit BasicAuth
+app.post('/login', authMiddleware, (req, res) => {
+    req.session.authenticated = true;
+    res.status(201).json({ email: req.auth.user, message: 'Login erfolgreich' });
+});
+
+// Endpunkt für die Überprüfung der Session
+app.get('/verify', (req, res) => {
+    if (req.session.authenticated) {
+        res.status(200).json({ email: req.auth.user });
+    } else {
+        res.status(401).json({ error: 'Unauthentifizierter Benutzer' });
+    }
+});
+
+// Endpunkt für den Logout
+app.delete('/logout', (req, res) => {
+    req.session.authenticated = false;
+    res.status(204).send();
+});
+
+// Endpunkt für den öffentlichen Zugriff
+app.get('/public', (req, res) => {
+    res.send('Public endpoint');
+});
+
+// Endpunkt für den privaten Zugriff
+app.get('/private', authMiddleware, (req, res) => {
+    res.send('Private endpoint');
+});
 
 let books = [
     { isbn: '978-3-16-148410-0', title: 'Der Herr der Ringe', year: 1954, author: 'J.R.R. Tolkien' },
@@ -80,12 +126,12 @@ app.patch('/books/:isbn', (req, res) => {
 
 
 // GET alle Ausleihen
-app.get('/lends', (req, res) => {
+app.get('/lends', authMiddleware, (req, res) => {
     res.json(lends);
 });
 
 // GET einzelne Ausleihe anhand ihrer id
-app.get('/lends/:id', (req, res) => {
+app.get('/lends/:id', authMiddleware, (req, res) => {
     const id = parseInt(req.params.id);
     const lend = lends.find((lend) => lend.id === id);
     if (lend) {
@@ -96,7 +142,7 @@ app.get('/lends/:id', (req, res) => {
 });
 
 // POST Ausleihen eines Buchs
-app.post('/lends', (req, res) => {
+app.post('/lends', authMiddleware, (req, res) => {
     const { customer_id, isbn } = req.body;
     const borrowed_at = new Date();
     const returned_at = null;
@@ -110,7 +156,7 @@ app.post('/lends', (req, res) => {
 
 
 // DELETE Zurückgeben id
-app.delete('/lends/:id', (req, res) => {
+app.delete('/lends/:id', authMiddleware, (req, res) => {
     const id = parseInt(req.params.id);
     const index = lends.findIndex(lend => lend.id === id);
     if (index !== -1) {
