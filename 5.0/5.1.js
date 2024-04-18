@@ -13,7 +13,7 @@ app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(session({
     secret: 'geheimnisvollesGeheimnis',
-    resave: false,
+    resave: true,
     saveUninitialized: true
 }));
 
@@ -30,9 +30,9 @@ app.post('/login', authMiddleware, (req, res) => {
 //?
 app.get('/verify', (req, res) => {
     if (req.session.authenticated) {
-        res.status(200).json({ email: req.auth.user });
+        res.status(200).json({ email: req.session.email });
     } else {
-        res.status(401).json({ error: 'Unauthentifizierter Benutzer' });
+        res.status(401).json({ error: 'Unauthenticated user' });
     }
 });
 
